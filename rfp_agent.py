@@ -1,5 +1,5 @@
 """
-RFP Supplier Agent — Streamlit app
+RFP Supplier Agent — Streamlit app · Zinit brand
 Deploy on share.streamlit.io
 """
 
@@ -10,28 +10,336 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-st.set_page_config(page_title="RFP Supplier Agent", page_icon="🔍", layout="wide")
-st.markdown("<style>.block-container{padding-top:2rem;}</style>", unsafe_allow_html=True)
+st.set_page_config(
+    page_title="Zinit · Supplier Search",
+    page_icon="🔍",
+    layout="wide",
+)
 
-st.title("🔍 RFP Supplier Agent")
-st.caption("Two-stage search: finds relevant supplier companies, then locates the right commercial contact at each one.")
-st.divider()
+# ─── Zinit brand CSS ────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
 
-with st.sidebar:
-    st.header("Settings")
-    api_key = st.text_input("Anthropic API Key", type="password", placeholder="sk-ant-api03-...")
-    st.caption("Stored in session only — never saved to disk.")
-    supplier_count_override = st.number_input(
-        "Suppliers per RFP (override)", min_value=0, max_value=50, value=0,
-        help="Set to 0 to use value from the Excel file. Start with 3-5 to test quality first."
-    )
-    st.divider()
-    st.markdown("**How it works:**")
-    st.markdown("**Stage 1** — Finds N verified supplier companies via web search")
-    st.markdown("**Stage 2** — Finds the right commercial contact at each company")
-    st.markdown("*(Sales Manager, KAM, BD Manager, Tender Manager...)*")
-    st.divider()
-    st.markdown("Tip: Start with 3–5 suppliers to verify quality before running 20.")
+html, body, [class*="css"], .stApp, div, p, span, label, input, button {
+    font-family: 'Rubik', sans-serif !important;
+}
+
+.stApp { background: #F4F2FF; }
+
+/* hide chrome */
+#MainMenu, footer { visibility: hidden; }
+.block-container { padding-top: 0 !important; padding-bottom: 40px !important; max-width: 1160px; }
+
+/* ─ Topbar ─ */
+.zn-topbar {
+    background: #3D0099;
+    padding: 0 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: -1rem -1rem 0;
+}
+.zn-logo-svg { height: 20px; display: block; }
+.zn-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.zn-badge {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    color: rgba(255,255,255,.85);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 12px;
+    border-radius: 20px;
+    letter-spacing: .3px;
+}
+
+/* ─ Hero ─ */
+.zn-hero {
+    background: linear-gradient(135deg, #1A0050 0%, #3D0099 55%, #6B21D4 100%);
+    padding: 36px 48px 40px;
+    margin: 0 -1rem 28px;
+    position: relative;
+    overflow: hidden;
+}
+.zn-hero::before {
+    content:'';position:absolute;top:-60px;right:-60px;
+    width:320px;height:320px;border-radius:50%;
+    background:radial-gradient(circle,rgba(109,70,229,.45) 0%,transparent 70%);
+}
+.zn-hero::after {
+    content:'';position:absolute;bottom:-80px;left:35%;
+    width:240px;height:240px;border-radius:50%;
+    background:radial-gradient(circle,rgba(6,182,212,.22) 0%,transparent 70%);
+}
+.zn-hero-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #7EDCE8;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+}
+.zn-hero-title {
+    font-size: 30px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.25;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+}
+.zn-hero-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,.62);
+    line-height: 1.65;
+    max-width: 560px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 20px;
+}
+.zn-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+.zn-pill {
+    background: rgba(255,255,255,.11);
+    border: 1px solid rgba(255,255,255,.18);
+    color: rgba(255,255,255,.88);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 20px;
+}
+.zn-pill-teal {
+    background: rgba(6,182,212,.2);
+    border-color: rgba(6,182,212,.45);
+    color: #5EE3F3;
+}
+
+/* ─ Cards ─ */
+.zn-card {
+    background: #fff;
+    border: 1px solid #E5DFFB;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 16px rgba(61,0,153,.06);
+}
+.zn-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #F0EBFA;
+}
+.zn-step {
+    background: linear-gradient(135deg,#5B21B6,#7C3AED);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 8px;
+    letter-spacing: .5px;
+}
+.zn-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A0050;
+}
+
+/* ─ How-it-works strip ─ */
+.zn-how {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 12px;
+    margin-bottom: 0;
+}
+.zn-how-item {
+    background: #F8F5FF;
+    border: 1px solid #E5DFFB;
+    border-radius: 12px;
+    padding: 16px 18px;
+}
+.zn-how-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #7C3AED;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-bottom: 5px;
+}
+.zn-how-label-teal { color: #0891B2; }
+.zn-how-desc { font-size: 13px; color: #4A3575; line-height: 1.5; }
+
+/* ─ Status chip ─ */
+.zn-status {
+    display: inline-block;
+    background: rgba(6,182,212,.1);
+    color: #0891B2;
+    border: 1px solid rgba(6,182,212,.3);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+/* ─ Streamlit overrides ─ */
+.stTextInput input, .stNumberInput input {
+    border: 1.5px solid #DDD6F0 !important;
+    border-radius: 10px !important;
+    font-family: 'Rubik',sans-serif !important;
+    font-size: 13px !important;
+    color: #1A0050 !important;
+    background: #FAFAFE !important;
+    padding: 10px 14px !important;
+}
+.stTextInput input:focus, .stNumberInput input:focus {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 3px rgba(124,58,237,.12) !important;
+}
+
+/* Primary → purple gradient */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg,#5B21B6 0%,#7C3AED 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    font-family: 'Rubik',sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 11px 32px !important;
+    letter-spacing: .2px !important;
+    box-shadow: 0 4px 14px rgba(91,33,182,.35) !important;
+    transition: all .2s !important;
+}
+.stButton > button[kind="primary"]:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 22px rgba(91,33,182,.45) !important;
+}
+.stButton > button[kind="primary"]:disabled {
+    background: #C4B8E8 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Download → teal */
+.stDownloadButton > button {
+    background: linear-gradient(135deg,#0E7490 0%,#06B6D4 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    font-family: 'Rubik',sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 11px 32px !important;
+    box-shadow: 0 4px 14px rgba(6,182,212,.35) !important;
+    transition: all .2s !important;
+}
+.stDownloadButton > button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 22px rgba(6,182,212,.45) !important;
+}
+
+/* File uploader */
+[data-testid="stFileUploader"] {
+    background: #FAFAFE !important;
+    border: 2px dashed #C4B8E8 !important;
+    border-radius: 14px !important;
+    padding: 8px !important;
+}
+[data-testid="stFileUploader"]:hover { border-color: #7C3AED !important; }
+
+/* Progress bar */
+.stProgress > div > div {
+    background: linear-gradient(90deg,#5B21B6,#06B6D4) !important;
+    border-radius: 4px !important;
+}
+/* Dataframe */
+[data-testid="stDataFrame"] {
+    border: 1px solid #E5DFFB !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+/* Metrics */
+[data-testid="stMetric"] {
+    background: #FAFAFE !important;
+    border: 1px solid #E5DFFB !important;
+    border-radius: 12px !important;
+    padding: 16px 20px !important;
+}
+[data-testid="stMetricValue"] { color: #1A0050 !important; font-weight: 700 !important; }
+[data-testid="stMetricDelta"] { color: #06B6D4 !important; }
+
+/* Alerts */
+.stSuccess { background: rgba(6,182,212,.07) !important; border-color: rgba(6,182,212,.3) !important; border-radius: 10px !important; }
+.stInfo    { background: rgba(91,33,182,.05) !important; border-color: rgba(91,33,182,.2) !important; border-radius: 10px !important; }
+.stError   { border-radius: 10px !important; }
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background: #1A0050 !important;
+    border-right: 1px solid rgba(255,255,255,.07) !important;
+}
+[data-testid="stSidebar"] * { color: rgba(255,255,255,.82) !important; }
+[data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3 { color: #fff !important; }
+[data-testid="stSidebar"] .stTextInput input,
+[data-testid="stSidebar"] .stNumberInput input {
+    background: rgba(255,255,255,.08) !important;
+    border-color: rgba(255,255,255,.15) !important;
+    color: #fff !important;
+}
+[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,.1) !important; }
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p { color: rgba(255,255,255,.65) !important; }
+
+hr { border-color: #EDE8FA !important; }
+.stSpinner > div { border-top-color: #7C3AED !important; }
+</style>
+
+<!-- topbar -->
+<div class="zn-topbar">
+  <svg class="zn-logo-svg" viewBox="0 0 78 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10.1219 18.2687H15.5444V24H0L5.42245 14.3284H0V8.59701H15.5444L10.1219 18.2687Z" fill="white" fill-opacity=".87"/>
+    <path d="M26.0278 24H20.2438V8.59701H26.0278V24Z" fill="white" fill-opacity=".87"/>
+    <path d="M38.5968 8.59701C40.0676 8.59701 41.3447 8.59462 42.394 8.67957C43.4769 8.76726 44.5693 8.96209 45.6249 9.49498C47.1893 10.2849 48.4614 11.5454 49.2585 13.0956C49.7963 14.1415 49.9929 15.224 50.0814 16.2971C50.1672 17.3368 50.1647 18.6024 50.1647 20.0597V24H44.3808V20.0597C44.3808 18.5079 44.3786 17.5163 44.3165 16.7641C44.2573 16.0456 44.1583 15.801 44.1051 15.6975C43.8625 15.2257 43.4752 14.842 42.9991 14.6016C42.8947 14.5489 42.6478 14.4507 41.9227 14.392C41.1636 14.3306 40.1629 14.3284 38.5968 14.3284H36.5112V24H30.7272V8.59701H38.5968Z" fill="white" fill-opacity=".87"/>
+    <path d="M60.7315 24H54.9475V8.59701H60.7315V24Z" fill="white" fill-opacity=".87"/>
+    <path d="M71.1316 8.59701H78V13.9701H71.1362C71.1417 14.7517 71.1554 15.343 71.1958 15.8329C71.2551 16.5514 71.3541 16.7961 71.4073 16.8995C71.6499 17.3713 72.0372 17.755 72.5133 17.9954C72.6177 18.0481 72.8645 18.1463 73.5897 18.205C74.3488 18.2664 75.3494 18.2687 76.9155 18.2687H78V24H76.9155C75.4448 24 74.1677 24.0024 73.1184 23.9174C72.0354 23.8298 70.943 23.6349 69.8875 23.102C68.323 22.3121 67.051 21.0516 66.2538 19.5014C65.716 18.4555 65.5194 17.373 65.4309 16.2999C65.3747 15.6174 65.3567 14.8376 65.3508 13.9701H65.3476V3.22388H71.1316V8.59701Z" fill="white" fill-opacity=".87"/>
+    <path d="M23.1358 0C24.9326 0 26.3893 1.44338 26.3893 3.22388C26.3893 5.00438 24.9326 6.44776 23.1358 6.44776C21.339 6.44776 19.8823 5.00438 19.8823 3.22388C19.8823 1.44338 21.339 0 23.1358 0Z" fill="white" fill-opacity=".87"/>
+    <path d="M57.8395 0C59.6363 0 61.093 1.44338 61.093 3.22388C61.093 5.00438 59.6363 6.44776 57.8395 6.44776C56.0427 6.44776 54.586 5.00438 54.586 3.22388C54.586 1.44338 56.0427 0 57.8395 0Z" fill="white" fill-opacity=".87"/>
+  </svg>
+  <div class="zn-topbar-right">
+    <span class="zn-badge">Supplier Search</span>
+    <span class="zn-badge">AI-powered</span>
+  </div>
+</div>
+
+<!-- hero -->
+<div class="zn-hero">
+  <div class="zn-hero-label">SSM Tool · Zinit Procurement Platform</div>
+  <div class="zn-hero-title">Supplier & Contact Search</div>
+  <div class="zn-hero-sub">
+    Upload a list of active RFPs — the agent finds verified supplier companies
+    and locates the right commercial contact at each one for SSM outreach.
+  </div>
+  <div class="zn-pills">
+    <span class="zn-pill">Stage 1 — Company discovery</span>
+    <span class="zn-pill zn-pill-teal">Stage 2 — Persona contact match</span>
+    <span class="zn-pill">Excel export ready for SSM</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 
 def normalize_header(text):
@@ -426,8 +734,17 @@ def build_output_excel(original_bytes, rfp_rows, results):
     return buf.getvalue()
 
 
-# ── Main UI ──
-st.subheader("Upload RFP File")
+# ── Main UI ──────────────────────────────────────────────────────────────────
+
+# ── Section 01: Upload ──
+st.markdown("""
+<div class="zn-card">
+  <div class="zn-card-head">
+    <span class="zn-step">01</span>
+    <span class="zn-card-title">Upload RFP Excel File</span>
+  </div>
+""", unsafe_allow_html=True)
+
 uploaded = st.file_uploader(
     "Drop your RFP_Supplier_Template.xlsx here",
     type=["xlsx", "xls"],
@@ -439,29 +756,54 @@ rfp_rows, spec_rows, original_bytes = [], [], None
 if uploaded:
     original_bytes = uploaded.read()
     rfp_rows, spec_rows = parse_excel(original_bytes)
-
     if rfp_rows:
-        st.success(f"Found **{len(rfp_rows)} RFP(s)** · {len(spec_rows)} specification lines")
+        st.success(f"✓ Found **{len(rfp_rows)} RFP(s)** in Collecting Bids · {len(spec_rows)} specification lines")
         import pandas as pd
         preview_data = []
         for r in rfp_rows:
             preview_data.append({
                 "RFP ID":    r["rfp_id"],
                 "Phase":     r["phase"] or "—",
-                "Title":     r["title"][:60] + ("..." if len(r["title"]) > 60 else ""),
+                "Title":     r["title"][:55] + ("…" if len(r["title"]) > 55 else ""),
                 "Country":   r["country"],
                 "Region":    r["region"] or "—",
-                "Keywords":  r["keywords"][:50] + ("..." if len(r["keywords"]) > 50 else ""),
+                "Keywords":  r["keywords"][:45] + ("…" if len(r["keywords"]) > 45 else ""),
                 "Suppliers": r["supplier_count"],
             })
         st.dataframe(pd.DataFrame(preview_data), use_container_width=True, hide_index=True)
 
-st.divider()
+st.markdown("</div>", unsafe_allow_html=True)
+
+# ── Section 02: Run ──
+st.markdown("""
+<div class="zn-card">
+  <div class="zn-card-head">
+    <span class="zn-step">02</span>
+    <span class="zn-card-title">Run Supplier Search</span>
+  </div>
+  <div class="zn-how">
+    <div class="zn-how-item">
+      <div class="zn-how-label">Stage 1 — Company discovery</div>
+      <div class="zn-how-desc">
+        Finds N verified supplier companies per RFP via web search.
+        Filters: PT/CV only · local/regional · B2B · no marketplaces.
+      </div>
+    </div>
+    <div class="zn-how-item">
+      <div class="zn-how-label zn-how-label-teal">Stage 2 — Persona contact</div>
+      <div class="zn-how-desc">
+        For each company finds: Sales Manager · KAM · Tender Manager · BD Director.
+        Fallback to general contacts if persona not found.
+      </div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 can_run = bool(rfp_rows) and bool(api_key) and api_key.startswith("sk-")
 
 if not api_key:
-    st.info("Enter your Anthropic API key in the sidebar to get started.")
+    st.info("👈 Enter your Anthropic API key in the sidebar to get started.")
 elif not api_key.startswith("sk-"):
     st.error("API key must start with sk-ant-...")
 elif not rfp_rows:
@@ -477,9 +819,10 @@ if st.button("Find Suppliers", type="primary", disabled=not can_run):
     def add_log(msg):
         log_lines.append(msg)
         log_area.markdown(
-            "<div style='background:#0d1117;border:1px solid #30363d;border-radius:6px;"
-            "padding:12px 16px;font-family:monospace;font-size:12px;max-height:320px;"
-            "overflow-y:auto;line-height:1.8;color:#8b949e'>"
+            "<div style='"
+            "background:#0D0621;border:1px solid rgba(124,58,237,.25);border-radius:12px;"
+            "padding:14px 20px;font-family:monospace;font-size:12px;max-height:320px;"
+            "overflow-y:auto;line-height:1.9;color:#A89DC8;'>"
             + "<br>".join(log_lines[-40:])
             + "</div>",
             unsafe_allow_html=True,
@@ -491,21 +834,18 @@ if st.button("Find Suppliers", type="primary", disabled=not can_run):
         specs = [s for s in spec_rows if s["rfp_id"] == rfp["rfp_id"]]
         overall_bar.progress(i / total, text=f"Processing {rfp['rfp_id']} ({i+1}/{total})")
 
-        add_log(f"[{i+1}/{total}] {rfp['rfp_id']} -- {rfp['title'] or '(no title)'}")
+        add_log(f"[{i+1}/{total}] {rfp['rfp_id']} — {rfp['title'] or '(no title)'}")
         add_log(f"  Location: {rfp['region'] or rfp['country']} | Keywords: {rfp['keywords'] or '(empty)'}")
-        if specs:
-            add_log(f"  Specification: {len(specs)} line items")
-        else:
-            add_log(f"  No specification -- using title & description")
+        add_log(f"  Spec lines: {len(specs)}" if specs else "  No specification — using title & description")
 
         add_log(f"  [Stage 1] Searching {count} verified companies...")
         companies = []
         try:
             companies = find_companies(client, rfp, specs, count)
             verified = sum(1 for c in companies if c.get("verified", True))
-            add_log(f"  [Stage 1] Done: {len(companies)} companies found ({verified} verified)")
+            add_log(f"  [Stage 1] ✓ {len(companies)} found ({verified} verified)")
         except Exception as e:
-            add_log(f"  [Stage 1] ERROR: {e}")
+            add_log(f"  [Stage 1] ✗ {e}")
             results[rfp["rfp_id"]] = []
             if i < total - 1:
                 time.sleep(5)
@@ -518,11 +858,11 @@ if st.button("Find Suppliers", type="primary", disabled=not can_run):
                 contact = find_contact(client, co, rfp)
                 enriched.append({**co, **contact})
                 if contact.get("contact_found"):
-                    add_log(f"    OK {co['company_name']}: {contact.get('contact_person')} ({contact.get('job_title')})")
+                    add_log(f"    ✓ {co['company_name']}: {contact.get('contact_person')} ({contact.get('job_title')})")
                 else:
-                    add_log(f"    ~ {co['company_name']}: no persona -- general contacts saved")
+                    add_log(f"    ~ {co['company_name']}: no persona match — general contacts saved")
             except Exception as e:
-                add_log(f"    ERROR {co['company_name']}: {e}")
+                add_log(f"    ✗ {co['company_name']}: {e}")
                 enriched.append({
                     **co,
                     "contact_found": False, "contact_person": "", "job_title": "",
@@ -534,18 +874,24 @@ if st.button("Find Suppliers", type="primary", disabled=not can_run):
 
         results[rfp["rfp_id"]] = enriched
         with_contact = sum(1 for s in enriched if s.get("contact_found"))
-        add_log(f"  [Stage 2] Done: persona contacts {with_contact}/{len(enriched)}")
-
+        add_log(f"  [Stage 2] ✓ Persona contacts: {with_contact}/{len(enriched)}")
         if i < total - 1:
             add_log("  Pausing 5s before next RFP...")
             time.sleep(5)
 
-    overall_bar.progress(1.0, text="Done!")
-    add_log("=" * 50)
-    add_log("All RFPs processed.")
+    overall_bar.progress(1.0, text="✓ Done!")
+    add_log("=" * 52)
+    add_log("All RFPs processed. Download the Excel file below.")
 
-    st.divider()
-    st.subheader("Results")
+    # ── Results ──
+    st.markdown("""
+<div class="zn-card" style="margin-top:20px">
+  <div class="zn-card-head">
+    <span class="zn-step" style="background:linear-gradient(135deg,#0E7490,#06B6D4)">✓</span>
+    <span class="zn-card-title">Results — Ready for SSM</span>
+  </div>
+""", unsafe_allow_html=True)
+
     cols = st.columns(min(len(rfp_rows), 4))
     for i, rfp in enumerate(rfp_rows):
         sup = results.get(rfp["rfp_id"], [])
@@ -557,13 +903,14 @@ if st.button("Find Suppliers", type="primary", disabled=not can_run):
                 delta=f"{wc} with persona contact",
             )
 
-    st.divider()
-    with st.spinner("Building Excel file..."):
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    with st.spinner("Building Excel..."):
         out_bytes = build_output_excel(original_bytes, rfp_rows, results)
 
     from datetime import date
     st.download_button(
-        label="Download Excel for SSM",
+        label="⬇ Download Excel for SSM",
         data=out_bytes,
         file_name=f"RFP_Suppliers_{date.today()}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
