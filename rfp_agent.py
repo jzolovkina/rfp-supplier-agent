@@ -313,20 +313,13 @@ GREY_BG = "F2F2F2"
 
 
 def build_output_excel(original_bytes, rfp_rows, results):
-    wb_orig = openpyxl.load_workbook(io.BytesIO(original_bytes))
-    wb_out = openpyxl.Workbook()
-    wb_out.remove(wb_out.active)
+    # Load the original file as-is — RFP_Input and SPEC_Items keep 100% of their formatting
+    wb_out = openpyxl.load_workbook(io.BytesIO(original_bytes))
 
-    for sheet_name in ["RFP_Input", "SPEC_Items"]:
-        if sheet_name in wb_orig.sheetnames:
-            ws_src = wb_orig[sheet_name]
-            ws_dst = wb_out.create_sheet(sheet_name)
-            ws_dst.sheet_properties.tabColor = "2E5FA3"
-            for row in ws_src.iter_rows():
-                for cell in row:
-                    ws_dst.cell(row=cell.row, column=cell.column, value=cell.value)
-            for col in ws_src.column_dimensions:
-                ws_dst.column_dimensions[col].width = ws_src.column_dimensions[col].width
+    # Remove all old Results_ sheets and Instructions from the output workbook
+    for sheet_name in list(wb_out.sheetnames):
+        if sheet_name.startswith("Results_") or sheet_name == "📋 Instructions":
+            del wb_out[sheet_name]
 
     HEADERS = [
         "#", "Company Name", "Website", "Country", "City",
