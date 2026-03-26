@@ -27,11 +27,11 @@ with st.sidebar:
     )
     st.divider()
     st.markdown("**How it works:**")
-    st.markdown("**Stage 1** — Finds N relevant companies via web search")
+    st.markdown("**Stage 1** — Finds N verified supplier companies via web search")
     st.markdown("**Stage 2** — Finds the right commercial contact at each company")
-    st.markdown("_(Sales Manager, KAM, BD Manager, Tender Manager...)_")
+    st.markdown("*(Sales Manager, KAM, BD Manager, Tender Manager...)*")
     st.divider()
-    st.markdown("Tip: Start with 3 suppliers to verify quality before running 20.")
+    st.markdown("Tip: Start with 3–5 suppliers to verify quality before running 20.")
 
 
 def normalize_header(text):
@@ -178,41 +178,127 @@ def find_companies(client, rfp, specs, count):
         lines = []
         for i, s in enumerate(specs, 1):
             line = f"  {i}. {s['item_name']}"
+            if s["description"]:
+                line += f" — {s['description']}"
             if s["quantity"]:
                 line += f" | Qty: {s['quantity']} {s['unit']}"
             lines.append(line)
-        spec_text = "\n\nSPECIFICATION:\n" + "\n".join(lines)
+        spec_text = "\n\nSPECIFICATION (exact items/works needed):\n" + "\n".join(lines)
 
-    prompt = f"""You are a procurement specialist. Find {count} real companies that can supply what is described.
+    # Detect tender type from keywords + description
+    combined = (rfp["keywords"] + " " + rfp["description"]).lower()
+    service_words = ["jasa", "service", "maintenance", "rental", "sewa",
+                     "installation", "repair", "pemasangan", "perawatan",
+                     "konstruksi", "construction", "works", "contractor"]
+    is_service = any(w in combined for w in service_words)
+    tender_type = "services / works" if is_service else "goods / products"
+
+    location = rfp["region"] or rfp["country"]
+
+    prompt = f"""You are a senior B2B procurement specialist. Your task is to find {count} REAL, VERIFIABLE companies for this tender through web search.
 
 TENDER:
+- ID: {rfp['rfp_id']}
 - Title: {rfp['title']}
-- Country: {rfp['country']}{(', ' + rfp['region']) if rfp['region'] else ''}
+- Type: {tender_type}
+- Country: {rfp['country']}
+- Delivery / service location: {location}
 - Keywords: {rfp['keywords']}
-- Description: {rfp['description'][:800]}{spec_text}
-{'NOTE: No specification provided - use title, description, and keywords.' if not has_spec else ''}
+- Description: {rfp['description'][:700]}{spec_text}
+{('- Additional notes: ' + rfp['notes']) if rfp['notes'] else ''}
 
-Return ONLY a JSON array with exactly {count} objects. No explanation, no markdown.
+MANDATORY SEARCH CRITERIA — every result must meet ALL of these:
 
-[{{"company_name":"...","website":"https://...","country":"...","city":"...","company_description":"2-3 sentences","why_relevant":"1-2 sentences","relevance_score":8}}]"""
+1. LEGAL ENTITY
+   Only formal registered companies (PT, CV, or local equivalent). No individuals, no unregistered vendors.
 
-    return call_claude(client, prompt, 5000, False)
+2. LOCATION
+   Must be able to deliver goods or provide services in: {location}.
+   Strongly prefer companies based in or near {location}.
+
+3. SUPPLY CHAIN ROLE
+   For goods: find suppliers, distributors, or authorized/official dealers — NOT online marketplaces.
+   For services: find contractors or service providers with relevant experience.
+   EXCLUDE: Tokopedia, Shopee, Lazada, Bukalapak, Amazon, eBay, Alibaba, and any other e-commerce marketplace.
+
+4. B2B POSTURE
+   Company must actively sell to businesses and participate in procurement or tenders.
+   Avoid consumer-only brands or retail-only stores.
+
+5. ACTIVE & VERIFIABLE
+   Must have a real website, Google Maps listing, or verifiable industry directory entry.
+   Only include companies you actually found through web search — not guessed or invented.
+
+6. SPECIFIC FIT
+   {"Prefer authorized distributors or official dealers for any branded products mentioned." if not is_service else "Must have proven experience in this specific type of service. Look for KBLI codes, project portfolio, or client references."}
+   {"Confirm they can supply the specific items or brands in the specification." if has_spec else "Confirm their core business matches what is being tendered."}
+
+ANTI-HALLUCINATION RULES:
+- If you cannot find {count} verified companies, return FEWER real ones. Quality over quantity.
+- Never invent a company name or guess a website URL.
+- Set "verified": false if you are not 100% certain the company exists and matches.
+
+Return ONLY a valid JSON array. No markdown, no explanation, nothing outside the brackets.
+
+[{{
+  "company_name": "PT Example Supplier",
+  "website": "https://example.co.id",
+  "country": "{rfp['country']}",
+  "city": "Jakarta",
+  "legal_type": "PT",
+  "supply_chain_role": "Authorized distributor / Contractor / Supplier",
+  "verified": true,
+  "company_description": "2-3 sentences: what they supply/do and who their clients are",
+  "why_relevant": "Specific reason why they are a strong match for THIS tender",
+  "relevance_score": 8
+}}]"""
+
+    return call_claude(client, prompt, 6000, False)
 
 
 def find_contact(client, company, rfp):
-    prompt = f"""Find a commercial contact person at this company.
+    prompt = f"""Find a commercial contact person at this company who is responsible for B2B sales and tender participation.
 
 COMPANY: {company['company_name']}
 WEBSITE: {company.get('website', 'unknown')}
 COUNTRY: {company.get('country', rfp['country'])}
-CONTEXT: Inviting to a tender for: {rfp['title']} ({rfp['keywords']})
+CONTEXT: This company will be invited to a procurement tender for: {rfp['title']} ({rfp['keywords']})
 
-Look for: Sales Manager, Key Account Manager, Business Development Manager, Sales Director, Commercial Director, Tender Manager, Bid Manager.
-NOT: secretary, HR, support, accountant.
-Contact priority: 1) direct mobile  2) personal email (NOT info@)  3) LinkedIn  4) general contacts
+TARGET PERSONA — who we are looking for:
+A person responsible for: attracting new clients, participating in tenders/RFPs, B2B sales.
+Motivated by: won tenders, contract volume, new corporate clients.
 
-Return ONLY a JSON object:
-{{"contact_found":true,"contact_person":"First Last","job_title":"Sales Manager","phone":"","email":"","linkedin":"","general_email":"","general_phone":"","contact_note":"where found"}}"""
+TARGET JOB TITLES (in priority order):
+Sales Manager, B2B Sales Manager, Corporate Sales Manager, Enterprise Sales Manager,
+Key Account Manager (KAM), Business Development Manager, Head of Business Development,
+Head of Sales, Sales Director, Commercial Director,
+Tender Manager, Bid Manager, Proposal Manager, RFP Manager, Pre-Sales Manager,
+Partnership Manager, Strategic Partnerships Manager.
+
+NOT looking for: secretary, office manager, HR, customer support, accountant, finance.
+
+CONTACT PRIORITY (search in this order):
+1. Direct mobile phone number
+2. Personal email (NOT info@, contact@, sales@, or other generic inboxes)
+3. LinkedIn profile URL
+4. General company email as last resort only
+
+Search LinkedIn, the company website, industry directories, and other sources.
+If you find a matching person → set "contact_found": true.
+If no matching person found → set "contact_found": false and provide whatever general company contacts you can find.
+
+Return ONLY a JSON object. No markdown, no text outside the braces.
+{{
+  "contact_found": true,
+  "contact_person": "First Last",
+  "job_title": "Sales Manager",
+  "phone": "direct mobile or empty string",
+  "email": "direct personal email or empty string",
+  "linkedin": "https://linkedin.com/in/... or empty string",
+  "general_email": "info@company.com or empty string",
+  "general_phone": "+xx xxx xxx xxxx or empty string",
+  "contact_note": "where found, or why persona was not found"
+}}"""
 
     return call_claude(client, prompt, 2000, True)
 
@@ -244,13 +330,22 @@ def build_output_excel(original_bytes, rfp_rows, results):
 
     HEADERS = [
         "#", "Company Name", "Website", "Country", "City",
+        "Legal Type", "Supply Chain Role", "Verified?",
         "Contact Person", "Job Title",
         "Direct Phone", "Direct Email", "LinkedIn",
         "General Email", "General Phone",
         "Company Description", "Why Relevant", "Relevance Score (1-10)",
         "Persona Match?", "Contact Notes",
     ]
-    COL_WIDTHS = [4, 26, 26, 13, 15, 22, 24, 18, 28, 28, 24, 18, 36, 36, 12, 18, 30]
+    COL_WIDTHS = [
+        4, 26, 26, 13, 15,
+        10, 22, 10,
+        22, 24,
+        18, 28, 28,
+        24, 18,
+        36, 36, 12,
+        18, 30,
+    ]
 
     for rfp in rfp_rows:
         suppliers = results.get(rfp["rfp_id"], [])
@@ -274,9 +369,11 @@ def build_output_excel(original_bytes, rfp_rows, results):
         ws.merge_cells(f"A2:{get_column_letter(len(HEADERS))}2")
         ctx = ws["A2"]
         with_contact = sum(1 for s in suppliers if s.get("contact_found"))
+        verified = sum(1 for s in suppliers if s.get("verified", True))
         ctx.value = (
             f"Keywords: {rfp['keywords']}  |  "
             f"Companies found: {len(suppliers)}  |  "
+            f"Verified: {verified}  |  "
             f"With persona contact: {with_contact}"
         )
         ctx.font = Font(name="Arial", italic=True, color="1F3864", size=9)
@@ -305,6 +402,9 @@ def build_output_excel(original_bytes, rfp_rows, results):
                     s.get("website", ""),
                     s.get("country", ""),
                     s.get("city", ""),
+                    s.get("legal_type", ""),
+                    s.get("supply_chain_role", ""),
+                    "Yes" if s.get("verified", True) else "Unverified",
                     s.get("contact_person", ""),
                     s.get("job_title", ""),
                     s.get("phone", ""),
@@ -357,6 +457,7 @@ if uploaded:
                 "Phase":     r["phase"] or "—",
                 "Title":     r["title"][:60] + ("..." if len(r["title"]) > 60 else ""),
                 "Country":   r["country"],
+                "Region":    r["region"] or "—",
                 "Keywords":  r["keywords"][:50] + ("..." if len(r["keywords"]) > 50 else ""),
                 "Suppliers": r["supplier_count"],
             })
@@ -398,17 +499,18 @@ if st.button("Find Suppliers", type="primary", disabled=not can_run):
         overall_bar.progress(i / total, text=f"Processing {rfp['rfp_id']} ({i+1}/{total})")
 
         add_log(f"[{i+1}/{total}] {rfp['rfp_id']} -- {rfp['title'] or '(no title)'}")
-        add_log(f"  Keywords: {rfp['keywords'] or '(empty - check Excel file)'}")
+        add_log(f"  Location: {rfp['region'] or rfp['country']} | Keywords: {rfp['keywords'] or '(empty)'}")
         if specs:
             add_log(f"  Specification: {len(specs)} line items")
         else:
             add_log(f"  No specification -- using title & description")
 
-        add_log(f"  [Stage 1] Searching {count} companies...")
+        add_log(f"  [Stage 1] Searching {count} verified companies...")
         companies = []
         try:
             companies = find_companies(client, rfp, specs, count)
-            add_log(f"  [Stage 1] Done: {len(companies)} companies found")
+            verified = sum(1 for c in companies if c.get("verified", True))
+            add_log(f"  [Stage 1] Done: {len(companies)} companies found ({verified} verified)")
         except Exception as e:
             add_log(f"  [Stage 1] ERROR: {e}")
             results[rfp["rfp_id"]] = []
