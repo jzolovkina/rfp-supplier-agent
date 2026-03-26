@@ -297,9 +297,22 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
 [data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3 { color: #fff !important; }
 [data-testid="stSidebar"] .stTextInput input,
 [data-testid="stSidebar"] .stNumberInput input {
-    background: rgba(255,255,255,.08) !important;
-    border-color: rgba(255,255,255,.15) !important;
-    color: #fff !important;
+    background: rgba(255,255,255,.12) !important;
+    border: 1.5px solid rgba(255,255,255,.25) !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+    caret-color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+[data-testid="stSidebar"] .stTextInput input::placeholder,
+[data-testid="stSidebar"] .stNumberInput input::placeholder {
+    color: rgba(255,255,255,.4) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.4) !important;
+}
+[data-testid="stSidebar"] .stTextInput input:focus,
+[data-testid="stSidebar"] .stNumberInput input:focus {
+    border-color: rgba(124,58,237,.8) !important;
+    box-shadow: 0 0 0 3px rgba(124,58,237,.2) !important;
 }
 [data-testid="stSidebar"] hr { border-color: rgba(255,255,255,.1) !important; }
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p { color: rgba(255,255,255,.65) !important; }
