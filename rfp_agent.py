@@ -43,10 +43,9 @@ def parse_excel(file_bytes):
             header_row_idx = i; break
     if header_row_idx < 0:
         st.error('Header "RFP ID" not found.'); return [], []
-    headers = [str(c or "").strip().lower().replace("/","_").replace(" ","_").replace("-","_")
-               .replace("(","").replace(")","").replace("\n","_").replace("__","_").strip("_")
-               for c in rows_raw[header_row_idx]]
-    idx = {h: i for i, h in enumerate(headers)}
+    import re as _re
+headers = [_re.sub(r'[^a-z0-9]+', '_', str(c or "").strip().lower()).strip("_")
+           for c in rows_raw[header_row_idx]]
     def get(row, *keys):
         for k in keys:
             if k in idx:
