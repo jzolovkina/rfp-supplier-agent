@@ -297,22 +297,30 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
 [data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3 { color: #fff !important; }
 [data-testid="stSidebar"] .stTextInput input,
 [data-testid="stSidebar"] .stNumberInput input {
-    background: rgba(255,255,255,.12) !important;
+    background: #2D1060 !important;
     border: 1.5px solid rgba(255,255,255,.25) !important;
     border-radius: 10px !important;
     color: #ffffff !important;
     caret-color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
+    font-family: 'Rubik', sans-serif !important;
 }
 [data-testid="stSidebar"] .stTextInput input::placeholder,
 [data-testid="stSidebar"] .stNumberInput input::placeholder {
-    color: rgba(255,255,255,.4) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.4) !important;
+    color: rgba(255,255,255,.45) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.45) !important;
 }
 [data-testid="stSidebar"] .stTextInput input:focus,
 [data-testid="stSidebar"] .stNumberInput input:focus {
-    border-color: rgba(124,58,237,.8) !important;
-    box-shadow: 0 0 0 3px rgba(124,58,237,.2) !important;
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 3px rgba(124,58,237,.25) !important;
+    outline: none !important;
+}
+/* number input +/- buttons */
+[data-testid="stSidebar"] .stNumberInput button {
+    background: #3D1080 !important;
+    border-color: rgba(255,255,255,.2) !important;
+    color: #fff !important;
 }
 [data-testid="stSidebar"] hr { border-color: rgba(255,255,255,.1) !important; }
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p { color: rgba(255,255,255,.65) !important; }
@@ -356,20 +364,10 @@ hr { border-color: #EDE8FA !important; }
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("""
-    <div style="padding:8px 0 20px;">
-      <svg viewBox="0 0 78 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:18px;display:block;margin-bottom:16px;">
-        <path d="M10.1219 18.2687H15.5444V24H0L5.42245 14.3284H0V8.59701H15.5444L10.1219 18.2687Z" fill="white" fill-opacity=".87"/>
-        <path d="M26.0278 24H20.2438V8.59701H26.0278V24Z" fill="white" fill-opacity=".87"/>
-        <path d="M38.5968 8.59701C40.0676 8.59701 41.3447 8.59462 42.394 8.67957C43.4769 8.76726 44.5693 8.96209 45.6249 9.49498C47.1893 10.2849 48.4614 11.5454 49.2585 13.0956C49.7963 14.1415 49.9929 15.224 50.0814 16.2971C50.1672 17.3368 50.1647 18.6024 50.1647 20.0597V24H44.3808V20.0597C44.3808 18.5079 44.3786 17.5163 44.3165 16.7641C44.2573 16.0456 44.1583 15.801 44.1051 15.6975C43.8625 15.2257 43.4752 14.842 42.9991 14.6016C42.8947 14.5489 42.6478 14.4507 41.9227 14.392C41.1636 14.3306 40.1629 14.3284 38.5968 14.3284H36.5112V24H30.7272V8.59701H38.5968Z" fill="white" fill-opacity=".87"/>
-        <path d="M60.7315 24H54.9475V8.59701H60.7315V24Z" fill="white" fill-opacity=".87"/>
-        <path d="M71.1316 8.59701H78V13.9701H71.1362C71.1417 14.7517 71.1554 15.343 71.1958 15.8329C71.2551 16.5514 71.3541 16.7961 71.4073 16.8995C71.6499 17.3713 72.0372 17.755 72.5133 17.9954C72.6177 18.0481 72.8645 18.1463 73.5897 18.205C74.3488 18.2664 75.3494 18.2687 76.9155 18.2687H78V24H76.9155C75.4448 24 74.1677 24.0024 73.1184 23.9174C72.0354 23.8298 70.943 23.6349 69.8875 23.102C68.323 22.3121 67.051 21.0516 66.2538 19.5014C65.716 18.4555 65.5194 17.373 65.4309 16.2999C65.3747 15.6174 65.3567 14.8376 65.3508 13.9701H65.3476V3.22388H71.1316V8.59701Z" fill="white" fill-opacity=".87"/>
-        <path d="M23.1358 0C24.9326 0 26.3893 1.44338 26.3893 3.22388C26.3893 5.00438 24.9326 6.44776 23.1358 6.44776C21.339 6.44776 19.8823 5.00438 19.8823 3.22388C19.8823 1.44338 21.339 0 23.1358 0Z" fill="white" fill-opacity=".87"/>
-        <path d="M57.8395 0C59.6363 0 61.093 1.44338 61.093 3.22388C61.093 5.00438 59.6363 6.44776 57.8395 6.44776C56.0427 6.44776 54.586 5.00438 54.586 3.22388C54.586 1.44338 56.0427 0 57.8395 0Z" fill="white" fill-opacity=".87"/>
-      </svg>
-    </div>
-    """, unsafe_allow_html=True)
-
+    st.markdown(
+        "<p style='font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;margin:0 0 20px;font-family:Rubik,sans-serif;'>zinit</p>",
+        unsafe_allow_html=True,
+    )
     st.header("Settings")
     api_key = st.text_input(
         "Anthropic API Key",
