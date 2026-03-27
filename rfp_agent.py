@@ -31,22 +31,6 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
 #MainMenu, footer { visibility: hidden; }
 .block-container { padding-top: 0 !important; padding-bottom: 40px !important; max-width: 1160px; }
 
-/* ─ Topbar ─ */
-.zn-topbar {
-    background: #3D0099;
-    padding: 0 40px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: -1rem -1rem 0;
-}
-.zn-logo-svg { height: 20px; display: block; }
-.zn-topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
 .zn-badge {
     background: rgba(255,255,255,.12);
     border: 1px solid rgba(255,255,255,.2);
@@ -55,16 +39,17 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
     font-weight: 500;
     padding: 3px 12px;
     border-radius: 20px;
-    letter-spacing: .3px;
 }
 
 /* ─ Hero ─ */
 .zn-hero {
     background: linear-gradient(135deg, #1A0050 0%, #3D0099 55%, #6B21D4 100%);
-    padding: 36px 48px 40px;
-    margin: 0 -1rem 28px;
+    padding: 36px 40px 40px;
+    margin: 24px 0 20px;
+    border-radius: 16px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 24px rgba(61,0,153,.18);
 }
 .zn-hero::before {
     content:'';position:absolute;top:-60px;right:-60px;
@@ -120,11 +105,6 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
     padding: 5px 14px;
     border-radius: 20px;
 }
-.zn-pill-teal {
-    background: rgba(6,182,212,.2);
-    border-color: rgba(6,182,212,.45);
-    color: #5EE3F3;
-}
 
 /* ─ Cards ─ */
 .zn-card {
@@ -179,7 +159,6 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
     letter-spacing: .1em;
     margin-bottom: 5px;
 }
-.zn-how-label-teal { color: #0891B2; }
 .zn-how-desc { font-size: 13px; color: #4A3575; line-height: 1.5; }
 
 /* ─ Status chip ─ */
@@ -329,24 +308,7 @@ hr { border-color: #EDE8FA !important; }
 .stSpinner > div { border-top-color: #7C3AED !important; }
 </style>
 
-<!-- topbar -->
-<div class="zn-topbar">
-  <svg class="zn-logo-svg" viewBox="0 0 78 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10.1219 18.2687H15.5444V24H0L5.42245 14.3284H0V8.59701H15.5444L10.1219 18.2687Z" fill="white" fill-opacity=".87"/>
-    <path d="M26.0278 24H20.2438V8.59701H26.0278V24Z" fill="white" fill-opacity=".87"/>
-    <path d="M38.5968 8.59701C40.0676 8.59701 41.3447 8.59462 42.394 8.67957C43.4769 8.76726 44.5693 8.96209 45.6249 9.49498C47.1893 10.2849 48.4614 11.5454 49.2585 13.0956C49.7963 14.1415 49.9929 15.224 50.0814 16.2971C50.1672 17.3368 50.1647 18.6024 50.1647 20.0597V24H44.3808V20.0597C44.3808 18.5079 44.3786 17.5163 44.3165 16.7641C44.2573 16.0456 44.1583 15.801 44.1051 15.6975C43.8625 15.2257 43.4752 14.842 42.9991 14.6016C42.8947 14.5489 42.6478 14.4507 41.9227 14.392C41.1636 14.3306 40.1629 14.3284 38.5968 14.3284H36.5112V24H30.7272V8.59701H38.5968Z" fill="white" fill-opacity=".87"/>
-    <path d="M60.7315 24H54.9475V8.59701H60.7315V24Z" fill="white" fill-opacity=".87"/>
-    <path d="M71.1316 8.59701H78V13.9701H71.1362C71.1417 14.7517 71.1554 15.343 71.1958 15.8329C71.2551 16.5514 71.3541 16.7961 71.4073 16.8995C71.6499 17.3713 72.0372 17.755 72.5133 17.9954C72.6177 18.0481 72.8645 18.1463 73.5897 18.205C74.3488 18.2664 75.3494 18.2687 76.9155 18.2687H78V24H76.9155C75.4448 24 74.1677 24.0024 73.1184 23.9174C72.0354 23.8298 70.943 23.6349 69.8875 23.102C68.323 22.3121 67.051 21.0516 66.2538 19.5014C65.716 18.4555 65.5194 17.373 65.4309 16.2999C65.3747 15.6174 65.3567 14.8376 65.3508 13.9701H65.3476V3.22388H71.1316V8.59701Z" fill="white" fill-opacity=".87"/>
-    <path d="M23.1358 0C24.9326 0 26.3893 1.44338 26.3893 3.22388C26.3893 5.00438 24.9326 6.44776 23.1358 6.44776C21.339 6.44776 19.8823 5.00438 19.8823 3.22388C19.8823 1.44338 21.339 0 23.1358 0Z" fill="white" fill-opacity=".87"/>
-    <path d="M57.8395 0C59.6363 0 61.093 1.44338 61.093 3.22388C61.093 5.00438 59.6363 6.44776 57.8395 6.44776C56.0427 6.44776 54.586 5.00438 54.586 3.22388C54.586 1.44338 56.0427 0 57.8395 0Z" fill="white" fill-opacity=".87"/>
-  </svg>
-  <div class="zn-topbar-right">
-    <span class="zn-badge">Supplier Search</span>
-    <span class="zn-badge">AI-powered</span>
-  </div>
-</div>
-
-<!-- hero -->
+<!-- hero card -->
 <div class="zn-hero">
   <div class="zn-hero-label">SSM Tool · Zinit Procurement Platform</div>
   <div class="zn-hero-title">Supplier & Contact Search</div>
@@ -356,7 +318,7 @@ hr { border-color: #EDE8FA !important; }
   </div>
   <div class="zn-pills">
     <span class="zn-pill">Stage 1 — Company discovery</span>
-    <span class="zn-pill zn-pill-teal">Stage 2 — Persona contact match</span>
+    <span class="zn-pill">Stage 2 — Persona contact match</span>
     <span class="zn-pill">Excel export ready for SSM</span>
   </div>
 </div>
@@ -365,7 +327,7 @@ hr { border-color: #EDE8FA !important; }
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(
-        "<p style='font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;margin:0 0 20px;font-family:Rubik,sans-serif;'>zinit</p>",
+        "<p style='font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-1px;margin:4px 0 24px;font-family:Rubik,sans-serif;line-height:1;'>zinit</p>",
         unsafe_allow_html=True,
     )
     st.header("Settings")
@@ -379,7 +341,7 @@ with st.sidebar:
     supplier_count_override = st.number_input(
         "Suppliers per RFP (override)",
         min_value=0, max_value=50, value=0,
-        help="Set to 0 to use value from the Excel file. Start with 3–5 to test quality first.",
+
     )
     st.divider()
     st.markdown("**How it works:**")
@@ -791,6 +753,9 @@ st.markdown("""
     <span class="zn-step">01</span>
     <span class="zn-card-title">Upload RFP Excel File</span>
   </div>
+  <p style="font-size:13px;color:#6B7280;margin:-8px 0 16px;">
+    Export your active tenders from Zinit in the RFP_Supplier_Template format and upload below.
+  </p>
 """, unsafe_allow_html=True)
 
 uploaded = st.file_uploader(
@@ -838,7 +803,7 @@ st.markdown("""
       </div>
     </div>
     <div class="zn-how-item">
-      <div class="zn-how-label zn-how-label-teal">Stage 2 — Persona contact</div>
+      <div class="zn-how-label">Stage 2 — Persona contact</div>
       <div class="zn-how-desc">
         For each company finds: Sales Manager · KAM · Tender Manager · BD Director.
         Fallback to general contacts if persona not found.
