@@ -28,12 +28,20 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
 .stApp { background: #F4F2FF; }
 
 /* hide chrome */
-#MainMenu, footer { visibility: hidden; }
-/* hide sidebar collapse button (shows as keyboard_double_ icon) */
+#MainMenu, footer, header { visibility: hidden !important; height: 0 !important; }
+/* hide sidebar collapse button — renders as keyboard_double_arrow text */
 [data-testid="collapsedControl"],
-button[data-testid="baseButton-headerNoPadding"],
-[data-testid="stSidebarCollapseButton"] { display: none !important; }
-.block-container { padding-top: 20px !important; padding-bottom: 40px !important; max-width: 1160px; }
+[data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="baseButton-headerNoPadding"],
+button[kind="header"],
+button[aria-label*="sidebar"],
+button[aria-label*="Collapse"],
+section[data-testid="stSidebar"] + div > div > button,
+div.stSidebarCollapsedControl { display: none !important; }
+/* prevent header reserve space */
+.stAppHeader, [data-testid="stAppHeader"] { display: none !important; }
+.block-container { padding-top: 28px !important; padding-bottom: 40px !important; max-width: 1160px; }
 
 .zn-badge {
     background: rgba(255,255,255,.12);
@@ -48,7 +56,7 @@ button[data-testid="baseButton-headerNoPadding"],
 /* ─ Hero ─ */
 .zn-hero {
     background: linear-gradient(135deg, #1A0050 0%, #3D0099 55%, #6B21D4 100%);
-    padding: 36px 40px 40px;
+    padding: 32px 36px 36px;
     margin: 0 0 20px;
     border-radius: 16px;
     position: relative;
@@ -348,7 +356,7 @@ hr { border-color: #EDE8FA !important; }
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(
-        "<p class='zn-sidebar-logo' style='font-size:28px;font-weight:700;letter-spacing:-1px;margin:4px 0 24px;font-family:Rubik,sans-serif;line-height:1;color:#fff !important;'>zinit</p>",
+        '<p style="font-size:30px;font-weight:700;letter-spacing:-1.5px;margin:4px 0 24px;line-height:1;"><span style="color:#ffffff;-webkit-text-fill-color:#ffffff;font-family:Rubik,sans-serif;">zinit</span></p>',
         unsafe_allow_html=True,
     )
     st.header("Settings")
