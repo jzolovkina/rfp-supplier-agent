@@ -29,7 +29,11 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
 
 /* hide chrome */
 #MainMenu, footer { visibility: hidden; }
-.block-container { padding-top: 0 !important; padding-bottom: 40px !important; max-width: 1160px; }
+/* hide sidebar collapse button (shows as keyboard_double_ icon) */
+[data-testid="collapsedControl"],
+button[data-testid="baseButton-headerNoPadding"],
+[data-testid="stSidebarCollapseButton"] { display: none !important; }
+.block-container { padding-top: 20px !important; padding-bottom: 40px !important; max-width: 1160px; }
 
 .zn-badge {
     background: rgba(255,255,255,.12);
@@ -45,7 +49,7 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
 .zn-hero {
     background: linear-gradient(135deg, #1A0050 0%, #3D0099 55%, #6B21D4 100%);
     padding: 36px 40px 40px;
-    margin: 24px 0 20px;
+    margin: 0 0 20px;
     border-radius: 16px;
     position: relative;
     overflow: hidden;
@@ -112,8 +116,17 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
     border: 1px solid #E5DFFB;
     border-radius: 16px;
     padding: 28px 32px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
     box-shadow: 0 2px 16px rgba(61,0,153,.06);
+}
+.zn-card-upload {
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 20px;
+}
+.zn-card-after-upload {
+    margin-top: 20px;
 }
 .zn-card-head {
     display: flex;
@@ -232,12 +245,14 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
     box-shadow: 0 6px 22px rgba(6,182,212,.45) !important;
 }
 
-/* File uploader */
+/* File uploader — styled to look connected to card above */
 [data-testid="stFileUploader"] {
-    background: #FAFAFE !important;
-    border: 2px dashed #C4B8E8 !important;
-    border-radius: 14px !important;
-    padding: 8px !important;
+    background: #fff !important;
+    border: 1.5px solid #E5DFFB !important;
+    border-radius: 0 0 16px 16px !important;
+    padding: 20px 28px !important;
+    margin-top: -22px !important;
+    box-shadow: 0 4px 16px rgba(61,0,153,.06) !important;
 }
 [data-testid="stFileUploader"]:hover { border-color: #7C3AED !important; }
 
@@ -272,7 +287,13 @@ html, body, [class*="css"], .stApp, div, p, span, label, input, button {
     background: #1A0050 !important;
     border-right: 1px solid rgba(255,255,255,.07) !important;
 }
-[data-testid="stSidebar"] * { color: rgba(255,255,255,.82) !important; }
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] .stMarkdown,
+[data-testid="stSidebar"] .stCaption,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span { color: rgba(255,255,255,.82) !important; }
+/* logo text always bright white */
+[data-testid="stSidebar"] .zn-sidebar-logo { color: #ffffff !important; font-size: 28px !important; }
 [data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3 { color: #fff !important; }
 [data-testid="stSidebar"] .stTextInput input,
 [data-testid="stSidebar"] .stNumberInput input {
@@ -327,7 +348,7 @@ hr { border-color: #EDE8FA !important; }
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(
-        "<p style='font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-1px;margin:4px 0 24px;font-family:Rubik,sans-serif;line-height:1;'>zinit</p>",
+        "<p class='zn-sidebar-logo' style='font-size:28px;font-weight:700;letter-spacing:-1px;margin:4px 0 24px;font-family:Rubik,sans-serif;line-height:1;color:#fff !important;'>zinit</p>",
         unsafe_allow_html=True,
     )
     st.header("Settings")
@@ -748,7 +769,7 @@ def build_output_excel(original_bytes, rfp_rows, results):
 
 # ── Section 01: Upload ──
 st.markdown("""
-<div class="zn-card">
+<div class="zn-card zn-card-upload">
   <div class="zn-card-head">
     <span class="zn-step">01</span>
     <span class="zn-card-title">Upload RFP Excel File</span>
@@ -789,7 +810,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 
 # ── Section 02: Run ──
 st.markdown("""
-<div class="zn-card">
+<div class="zn-card zn-card-after-upload">
   <div class="zn-card-head">
     <span class="zn-step">02</span>
     <span class="zn-card-title">Run Supplier Search</span>
